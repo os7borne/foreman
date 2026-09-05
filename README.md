@@ -24,8 +24,8 @@ The idea is simple:
                  ┌──────────┴──────────┐
                  │                     │
            ┌─────▼─────┐         ┌─────▼─────┐
-           │   Agent A  │         │   Agent B  │
-           │   worker   │         │   worker   │
+           │   Agent A  │         │  Agent B  │
+           │   worker   │         │   worker  │
            └────────────┘         └────────────┘
 ```
 
@@ -174,25 +174,84 @@ These are deliberate follow-on areas rather than reasons to make the core work m
 
 ## Installation
 
-### OpenClaw
+Foreman is currently installed as an AgentSkills-compatible skill. The repository contains the skill at `skills/foreman/`.
 
-Install the skill under the workspace skill directory:
+### 1. Clone the repository
 
-```text
-<workspace>/skills/foreman/
+```bash
+git clone https://github.com/os7borne/foreman.git
+cd foreman
 ```
 
-The directory should contain `SKILL.md` and the supporting Foreman files.
+### 2. Install for OpenClaw
 
-### Hermes
+Copy or symlink the Foreman skill into your OpenClaw workspace's `skills/` directory:
 
-Install the skill under:
-
-```text
-~/.hermes/skills/foreman/
+```bash
+mkdir -p <workspace>/skills
+cp -R skills/foreman <workspace>/skills/foreman
 ```
 
-Foreman follows the AgentSkills-style `SKILL.md` convention so the core instructions can remain portable across compatible hosts.
+For local development, a symlink is usually more convenient:
+
+```bash
+ln -s "$(pwd)/skills/foreman" <workspace>/skills/foreman
+```
+
+OpenClaw will discover the `SKILL.md` from the workspace skill directory.
+
+### 3. Install for Hermes
+
+Copy or symlink the skill into Hermes' skill directory:
+
+```bash
+mkdir -p ~/.hermes/skills
+cp -R skills/foreman ~/.hermes/skills/foreman
+```
+
+For local development:
+
+```bash
+ln -s "$(pwd)/skills/foreman" ~/.hermes/skills/foreman
+```
+
+Hermes can then discover the skill from `~/.hermes/skills/`.
+
+### 4. Initialize the local Foreman store
+
+The current implementation uses Python 3 and SQLite; no third-party Python packages are required.
+
+Initialize the default database with:
+
+```bash
+python3 skills/foreman/scripts/foreman.py init
+```
+
+By default this creates:
+
+```text
+~/.foreman/foreman.db
+```
+
+You can also point the CLI at a different database with its database option when needed.
+
+### 5. Verify the installation
+
+Create a test task:
+
+```bash
+python3 skills/foreman/scripts/foreman.py create \
+  --title "Test Foreman" \
+  --objective "Verify the durable work store is working"
+```
+
+Then inspect it:
+
+```bash
+python3 skills/foreman/scripts/foreman.py list
+```
+
+The skill itself is the agent-facing interface; the Python CLI is the current deterministic local persistence implementation.
 
 ## Storage
 
