@@ -168,25 +168,63 @@ These are deliberate follow-on areas rather than reasons to make the core work m
 
 ## Installation
 
-### OpenClaw
+Foreman follows the open Agent Skills convention, so the easiest installation path is to use the `skills` CLI where your agent environment supports it. The CLI can install skills directly from GitHub repositories and supports many agent environments. citeturn0search3
 
-Install the skill under the workspace skill directory:
+### 1. Ask your agent to install Foreman
+
+The simplest path is often to tell the agent you are already using:
+
+```text
+Install Foreman from https://github.com/os7borne/foreman.
+
+Read the repository's README and the Foreman skill files. Install the Foreman skill using the standard Agent Skills installation mechanism available in your environment. Then verify that Foreman is available and initialize its local persistence store if required.
+```
+
+### 2. Universal Agent Skills install
+
+For Agent Skills-compatible environments, run:
+
+```bash
+npx skills add os7borne/foreman
+```
+
+The `skills` CLI uses GitHub repositories as install sources and can target supported agent environments. citeturn0search3
+
+If the repository contains multiple skills and you want to target a specific skill, use the CLI's `--skill` option as appropriate for your environment. 
+
+### 3. Manual installation
+
+If your runtime does not use the common `skills` CLI, install the Foreman skill using its native skill directory:
+
+**OpenClaw**
 
 ```text
 <workspace>/skills/foreman/
 ```
 
-The directory should contain `SKILL.md` and the supporting Foreman files.
-
-### Hermes
-
-Install the skill under:
+**Hermes**
 
 ```text
 ~/.hermes/skills/foreman/
 ```
 
-Foreman follows the AgentSkills-style `SKILL.md` convention so the core instructions can remain portable across compatible hosts.
+The directory should contain `SKILL.md` and the supporting Foreman files.
+
+### 4. Initialize and verify
+
+After installation, initialize the local store:
+
+```bash
+python3 scripts/foreman.py init
+```
+
+Then verify that the Foreman skill is visible to your agent and that the local persistence store exists at:
+
+```text
+~/.foreman/foreman.db
+```
+
+The exact skill discovery path and invocation mechanism depend on the host agent. Basic Agent Skills compatibility does not imply that every host exposes every optional feature in the same way. citeturn0search3
 
 ## Storage
 
