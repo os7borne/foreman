@@ -174,18 +174,37 @@ These are deliberate follow-on areas rather than reasons to make the core work m
 
 ## Installation
 
-Foreman is currently installed as an AgentSkills-compatible skill. The repository contains the skill at `skills/foreman/`.
+The easiest way to install Foreman is through the open Agent Skills ecosystem. The `skills` CLI installs skills from GitHub repositories into supported agent environments. citeturn0search0turn0search1
 
-### 1. Clone the repository
+### 1. Ask your agent to install Foreman
+
+Give your agent this prompt:
+
+> Install Foreman from https://github.com/os7borne/foreman.
+>
+> Read the repository's README and `skills/foreman/SKILL.md`. Install the Foreman skill using the standard Agent Skills installation mechanism available in your environment. Then verify that Foreman is available and initialize its local persistence store if required.
+
+This is the preferred path when you are already working inside an agent. The agent can determine the appropriate host-specific installation details for its runtime.
+
+### 2. Universal install command
+
+For Agent Skills-compatible environments, run:
 
 ```bash
-git clone https://github.com/os7borne/foreman.git
-cd foreman
+npx skills add os7borne/foreman
 ```
 
-### 2. Install for OpenClaw
+The `skills` CLI is designed as a common installation interface across supported agent environments. citeturn0search0turn0search5
 
-Copy or symlink the Foreman skill into your OpenClaw workspace's `skills/` directory:
+After installation, start or reload your agent so it discovers the skill, then ask it to use Foreman for substantial work.
+
+### Manual installation
+
+If you are working with a host that does not use the `skills` CLI, you can install the skill directly.
+
+#### OpenClaw
+
+Copy or symlink `skills/foreman/` into the OpenClaw workspace skill directory:
 
 ```bash
 mkdir -p <workspace>/skills
@@ -198,9 +217,7 @@ For local development, a symlink is usually more convenient:
 ln -s "$(pwd)/skills/foreman" <workspace>/skills/foreman
 ```
 
-OpenClaw will discover the `SKILL.md` from the workspace skill directory.
-
-### 3. Install for Hermes
+#### Hermes
 
 Copy or symlink the skill into Hermes' skill directory:
 
@@ -215,13 +232,11 @@ For local development:
 ln -s "$(pwd)/skills/foreman" ~/.hermes/skills/foreman
 ```
 
-Hermes can then discover the skill from `~/.hermes/skills/`.
-
-### 4. Initialize the local Foreman store
+### Initialize the local Foreman store
 
 The current implementation uses Python 3 and SQLite; no third-party Python packages are required.
 
-Initialize the default database with:
+If you installed from the repository manually, initialize the default database with:
 
 ```bash
 python3 skills/foreman/scripts/foreman.py init
@@ -233,9 +248,7 @@ By default this creates:
 ~/.foreman/foreman.db
 ```
 
-You can also point the CLI at a different database with its database option when needed.
-
-### 5. Verify the installation
+### Verify the installation
 
 Create a test task:
 
@@ -251,7 +264,7 @@ Then inspect it:
 python3 skills/foreman/scripts/foreman.py list
 ```
 
-The skill itself is the agent-facing interface; the Python CLI is the current deterministic local persistence implementation.
+The skill is the agent-facing interface; the Python CLI is the current deterministic local persistence implementation.
 
 ## Storage
 
