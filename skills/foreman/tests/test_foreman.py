@@ -298,6 +298,23 @@ class TestBackwardCompatibility(ForemanTestCase):
         found = self.run_cli("search", "Alpha")
         self.assertTrue(any(t["id"] == tid for t in found))
 
+    def test_search_matches_description_and_returns_status_detail(self):
+        tid = self.run_cli(
+            "create", "--title", "Beta", "--objective", "obj",
+            "--description", "series A fintech screening",
+        )["id"]
+        self.run_cli("update", tid, "--status", "blocked", "--blocked-reason", "waiting on data")
+
+        found = self.run_cli("search", "fintech screening")
+        match = next(t for t in found if t["id"] == tid)
+        self.assertEqual(
+            set(match.keys()),
+            {"id", "title", "objective", "status", "progress", "next_action",
+             "blocked_reason", "updated_at"},
+        )
+        self.assertEqual(match["objective"], "obj")
+        self.assertEqual(match["blocked_reason"], "waiting on data")
+
     def test_context_and_update_json_shape_unchanged(self):
         tid = self.create_task()
         ctx = self.run_cli("context", tid)

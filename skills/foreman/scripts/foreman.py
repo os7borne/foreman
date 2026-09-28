@@ -24,7 +24,7 @@ def dispatch(con, args, path):
     if args.cmd == "create":
         emit(core.create_work(
             con, title=args.title, objective=args.objective,
-            task_type=args.type, status=args.status,
+            description=args.description, task_type=args.type, status=args.status,
         ))
         return
 
@@ -110,6 +110,7 @@ def main(argv=None):
     p = sp.add_parser("create")
     p.add_argument("--title", required=True)
     p.add_argument("--objective", required=True)
+    p.add_argument("--description", default=None)
     p.add_argument("--type", default="one_off")
     p.add_argument("--status", default="ready", choices=STATUS_CHOICES)
 

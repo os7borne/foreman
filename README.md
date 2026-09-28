@@ -127,39 +127,35 @@ The intended architecture is:
 
 A runtime-specific adapter can translate the host's native task/agent APIs into Foreman's durable representation. The Foreman model remains the portable contract.
 
-## v0.1
+## What Foreman provides today
 
-The current implementation provides a deliberately small foundation:
-
-- durable SQLite persistence
-- task lifecycle and status
-- ordered work steps
+- durable SQLite persistence, with WAL mode and concurrent-writer support
+- task lifecycle and status, with a validated state machine (invalid
+  transitions are rejected)
+- ordered work steps, with idempotent step completion
 - progress tracking
 - compact task context
-- decisions
-- events
-- artifact references
-- basic dependencies in the schema
+- decisions, events, artifact references
+- a live dependency graph (`add`/`remove-dependency`) with auto-block/
+  auto-unblock and cycle rejection
+- `pause` / `resume` / `cancel` operations
+- duplicate/similar-task detection before creating new work
 - task search and listing
-- deterministic Python CLI
-- AgentSkills-compatible `SKILL.md`
-- OpenClaw-compatible skill layout
-- Hermes-compatible installation model
+- a small importable library (`foreman_core.py`) plus a thin CLI wrapper
+  over it
+- Agent Skills-compatible `SKILL.md`, OpenClaw-compatible skill layout,
+  Hermes-compatible installation model
 
-The implementation intentionally does **not** attempt to provide a full hosted task-management product.
+The implementation intentionally does **not** attempt to provide a full hosted task-management product. See `CHANGELOG.md` for what shipped in which release.
 
 ### Current limitations
 
-v0.1 is a foundation, not the finished protocol. Areas still being hardened include:
+Foreman is still a foundation, not the finished protocol. Areas not yet built:
 
-- stronger lifecycle/state-transition validation
-- retry and crash-recovery semantics
-- concurrent SQLite access
 - schema versioning and migrations
-- richer dependency operations
 - native scheduling and recurring execution
-- host-specific adapters
-- real cross-agent integration tests
+- host-specific adapters (Hermes/OpenClaw) — the next milestone, see below
+- real cross-agent integration tests (a task started by one agent, resumed by another)
 - notification delivery
 - remote/shared storage
 - web UI
@@ -312,21 +308,21 @@ A project might look like this from Foreman's perspective:
 
 An agent does not need the entire original conversation to continue. It needs the compact state, relevant decisions/findings, and the referenced artifacts.
 
+## Example: recognizing existing work
+
+Weeks later, the user comes back and asks:
+
+> Find me some Series A fintech companies to look at for investment.
+
+Before creating a new task, the agent searches existing work and finds the project above. Rather than starting a duplicate, it surfaces what Foreman already knows:
+
+> There's already an in-progress task for this: 20 qualified Series A fintech targets, 40% complete, currently filtering candidates against ARR/exclusion criteria. Do you want me to continue that one, update its criteria with anything new, or is this a separate search?
+
+Only after that's resolved does the agent either resume the existing task or call `create` for a new one.
+
 ## Development roadmap
 
-The next milestone is **v0.1.1: battle-test the durable work layer**.
-
-Priority tests:
-
-1. crash halfway through a project and resume
-2. hand work from one agent to another
-3. verify compact context stays useful without replaying history
-4. test retry/idempotency behavior
-5. test concurrent access and failure recovery
-6. verify blocked/unblocked work behaves correctly
-7. verify artifacts survive agent changes
-8. prevent accidental or invalid completion
-9. exercise the skill in both OpenClaw and Hermes
+The durable work layer (lifecycle, idempotency, concurrency, dependency graph — see `CHANGELOG.md`) is now battle-tested. The next milestone is **native Hermes/OpenClaw adapters**: this is where the project's actual thesis is still unproven — no agent has yet handed off durable work to a *different* agent/session and had it resume correctly with no conversation replay.
 
 The most important demonstration is a real **OpenClaw ↔ Hermes handoff** where one agent starts substantial work, stops, and another agent continues from Foreman's durable state.
 
@@ -343,9 +339,15 @@ skills/foreman/
     └── smoke-test.md
 ```
 
+## Versioning
+
+Foreman follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`MAJOR.MINOR.PATCH`). The current version is the source of truth in `skills/foreman/SKILL.md`'s frontmatter; every release is recorded in [`CHANGELOG.md`](./CHANGELOG.md) and tagged in git as `vX.Y.Z`.
+
+While the major version is `0`, the CLI, `foreman_core` function signatures, and schema are not yet considered stable — a minor version bump may still include breaking changes. `1.0.0` will be cut once the API is considered stable (expected around or after the Phase 3 adapter work).
+
 ## Status
 
-**Early v0.1 / active development.**
+**Active development, pre-1.0.**
 
 The core thesis is intentionally being tested before adding a large feature surface: **can serious agent work survive the death or replacement of the agent that started it?**
 

@@ -143,7 +143,7 @@ def get_context(con, task_id: str) -> dict:
     }
 
 
-def create_work(con, *, title, objective, task_type="one_off", status="ready") -> dict:
+def create_work(con, *, title, objective, description=None, task_type="one_off", status="ready") -> dict:
     with transaction(con):
         task_id = str(uuid.uuid4())
         t = now()
@@ -151,9 +151,9 @@ def create_work(con, *, title, objective, task_type="one_off", status="ready") -
         completed_at = t if status == "completed" else None
         con.execute(
             """INSERT INTO tasks
-               (id,title,objective,task_type,status,created_at,updated_at,started_at,completed_at)
-               VALUES (?,?,?,?,?,?,?,?,?)""",
-            (task_id, title, objective, task_type, status, t, t, started_at, completed_at),
+               (id,title,objective,description,task_type,status,created_at,updated_at,started_at,completed_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+            (task_id, title, objective, description, task_type, status, t, t, started_at, completed_at),
         )
         con.execute(
             "INSERT INTO events(task_id,type,severity,summary,created_at) VALUES(?,?,?,?,?)",
@@ -326,10 +326,10 @@ def attach_artifact(con, task_id, *, path, description="") -> dict:
 def search_work(con, query) -> list:
     q = f"%{query}%"
     rows = con.execute(
-        """SELECT id,title,status,progress,next_action,updated_at
-           FROM tasks WHERE title LIKE ? OR objective LIKE ?
+        """SELECT id,title,objective,status,progress,next_action,blocked_reason,updated_at
+           FROM tasks WHERE title LIKE ? OR objective LIKE ? OR description LIKE ?
            ORDER BY updated_at DESC LIMIT 20""",
-        (q, q),
+        (q, q, q),
     ).fetchall()
     return [dict(r) for r in rows]
 
